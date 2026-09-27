@@ -1,0 +1,222 @@
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Arsip Pembayaran Kuliah</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>🎓 Arsip Pembayaran Kuliah</h1>
+
+        <p>Simpan bukti pembayaran semester 1 - 8</p>
+
+        <select id="semester">
+            <option>Semester 1</option>
+            <option>Semester 2</option>
+            <option>Semester 3</option>
+            <option>Semester 4</option>
+            <option>Semester 5</option>
+            <option>Semester 6</option>
+            <option>Semester 7</option>
+            <option>Semester 8</option>
+        </select>
+
+        <input
+            type="file"
+            id="fileInput"
+            accept="image/*,.pdf">
+
+        <button id="uploadBtn">
+            Upload
+        </button>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Daftar Arsip</h2>
+
+        <div
+        id="gallery"
+        class="gallery">
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const WEB_APP_URL =
+"https://script.google.com/macros/s/AKfycbxDlxoj3VKAsRQNpp2o1fvDxz9sQ8BsidmRQtL8ityxRcAdoAKY9KlAQ13rWIOdC0jg/exec";
+
+const uploadBtn =
+document.getElementById("uploadBtn");
+
+const gallery =
+document.getElementById("gallery");
+
+uploadBtn.addEventListener(
+    "click",
+    uploadFile
+);
+
+async function uploadFile(){
+
+    const file =
+    document.getElementById(
+        "fileInput"
+    ).files[0];
+
+    const semester =
+    document.getElementById(
+        "semester"
+    ).value;
+
+    if(!file){
+
+        alert(
+            "Pilih file terlebih dahulu"
+        );
+
+        return;
+
+    }
+
+    uploadBtn.innerText =
+    "Mengupload...";
+
+    const reader =
+    new FileReader();
+
+    reader.onload =
+    async function(){
+
+        try{
+
+            const base64 =
+            reader.result
+            .split(",")[1];
+
+            const response =
+            await fetch(
+                WEB_APP_URL,
+                {
+                    method:"POST",
+
+                    body:JSON.stringify({
+
+                        semester:
+                        semester,
+
+                        file:
+                        base64,
+
+                        fileName:
+                        file.name,
+
+                        mimeType:
+                        file.type
+
+                    })
+
+                }
+            );
+
+            const result =
+            await response.json();
+
+            let preview = "";
+
+            if(
+                file.type.includes(
+                    "pdf"
+                )
+            ){
+
+                preview = `
+                <div class="pdf-preview">
+                    📄
+                </div>
+                `;
+
+            }
+
+            else{
+
+                preview = `
+                <img
+                src="${result.fileUrl}">
+                `;
+            }
+
+            gallery.innerHTML += `
+
+            <div class="item">
+
+                ${preview}
+
+                <div class="item-content">
+
+                    <h3>
+                        ${semester}
+                    </h3>
+
+                    <p>
+                        ${file.name}
+                    </p>
+
+                    <a
+                    class="open-btn"
+                    href="${result.fileUrl}"
+                    target="_blank">
+
+                    Buka File
+
+                    </a>
+
+                </div>
+
+            </div>
+
+            `;
+
+            alert(
+                "Upload berhasil"
+            );
+
+        }
+
+        catch(error){
+
+            console.error(error);
+
+            alert(
+                "Upload gagal"
+            );
+
+        }
+
+        uploadBtn.innerText =
+        "Upload";
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+
+</script>
+
+</body>
+
+</html>
